@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Management Dashboard</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #0078d7;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .container {
+      width: 80%;
+      margin: 30px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #0078d7;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #0078d7;
+      padding-bottom: 5px;
+    }
+
+    form {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input, select {
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 15px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #0078d7;
+      color: white;
+    }
+
+    td select {
+      padding: 5px;
+      border-radius: 5px;
+    }
+
+    .status-pending {
+      color: #d9534f;
+      font-weight: bold;
+    }
+
+    .status-inprogress {
+      color: #f0ad4e;
+      font-weight: bold;
+    }
+
+    .status-completed {
+      color: #5cb85c;
+      font-weight: bold;
+    }
+
+    .no-tasks {
+      text-align: center;
+      color: #777;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Project Management Dashboard</header>
+
+  <div class="container">
+    <h2>Add New Task</h2>
+    <form id="taskForm">
+      <input type="text" id="taskName" placeholder="Enter Task Name" required>
+      <select id="taskStatus">
+        <option value="Pending">Pending</option>
+        <option value="InProgress">In Progress</option>
+        <option value="Completed">Completed</option>
+      </select>
+      <button type="submit">Add Task</button>
+    </form>
+
+    <h2>Task Status Board</h2>
+    <table id="taskTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Task Name</th>
+          <th>Status</th>
+          <th>Change Status</th>
+        </tr>
+      </thead>
+      <tbody id="taskBody">
+        <tr><td colspan="4" class="no-tasks">No tasks added yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Load tasks from LocalStorage
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    const taskForm = document.getElementById('taskForm');
+    const taskBody = document.getElementById('taskBody');
+
+    // Render all tasks
+    function renderTasks() {
+      taskBody.innerHTML = "";
+      if (tasks.length === 0) {
+        taskBody.innerHTML = '<tr><td colspan="4" class="no-tasks">No tasks added yet</td></tr>';
+        return;
+      }
+
+      tasks.forEach((task, index) => {
+        let statusClass = "";
+        if (task.status === "Pending") statusClass = "status-pending";
+        else if (task.status === "InProgress") statusClass = "status-inprogress";
+        else if (task.status === "Completed") statusClass = "status-completed";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${task.name}</td>
+          <td class="${statusClass}">${task.status}</td>
+          <td>
+            <select onchange="updateStatus(${index}, this.value)">
+              <option value="Pending" ${task.status === "Pending" ? "selected" : ""}>Pending</option>
+              <option value="InProgress" ${task.status === "InProgress" ? "selected" : ""}>In Progress</option>
+              <option value="Completed" ${task.status === "Completed" ? "selected" : ""}>Completed</option>
+            </select>
+          </td>
+        `;
+        taskBody.appendChild(row);
+      });
+    }
+
+    // Add new task
+    taskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const taskName = document.getElementById('taskName').value.trim();
+      const taskStatus = document.getElementById('taskStatus').value;
+
+      if (taskName === "") {
+        alert("Please enter a task name!");
+        return;
+      }
+
+      tasks.push({ name: taskName, status: taskStatus });
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+      taskForm.reset();
+    });
+
+    // Update status
+    function updateStatus(index, newStatus) {
+      tasks[index].status = newStatus;
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    // Initial render
+    renderTasks();
+  </script>
+
+</body>
+</html>

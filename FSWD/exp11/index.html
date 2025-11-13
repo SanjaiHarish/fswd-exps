@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AutoMarket — Buy & Sell Used Vehicles</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --accent-2:#06b6d4;
+    --danger:#ef4444; --success:#10b981; --radius:12px; --gap:16px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; background:linear-gradient(180deg,#f8fbff, var(--bg));
+    color:#07203a; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    padding:20px;
+  }
+
+  .app{ max-width:1150px; margin:0 auto; display:grid; grid-template-columns: 360px 1fr; gap:24px; align-items:start; }
+  @media (max-width:980px){ .app{ grid-template-columns: 1fr; padding:12px } }
+
+  header{ grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+  .brand{ display:flex; gap:12px; align-items:center }
+  .logo{ width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:white; display:flex; align-items:center; justify-content:center; font-weight:800 }
+  h1{ margin:0; font-size:18px }
+  .lead{ color:var(--muted); font-size:13px; margin:0 }
+
+  /* left panel (post form & filters) */
+  .panel{ background:var(--card); padding:16px; border-radius:var(--radius); box-shadow: 0 8px 30px rgba(2,6,23,0.06); }
+  .section-title{ font-weight:700; margin:0 0 10px 0 }
+  form .row{ display:flex; gap:8px; }
+  form label{ font-size:13px; color:var(--muted); margin-bottom:6px; display:block }
+  input[type="text"], input[type="number"], input[type="tel"], input[type="url"], textarea, select {
+    width:100%; padding:10px; border-radius:8px; border:1px solid #e6eef8; background:transparent; font-size:14px;
+  }
+  textarea{ min-height:90px; resize:vertical }
+  button { padding:10px 12px; border-radius:10px; border:0; cursor:pointer; font-weight:700 }
+  .btn-primary { background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:white }
+  .btn-ghost { background:transparent; color:var(--accent); border:1px solid rgba(37,99,235,0.12) }
+  .btn-danger { background:var(--danger); color:white }
+
+  .filters{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px }
+  .mini{ font-size:13px; color:var(--muted) }
+
+  /* right: listings */
+  .listings { display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; }
+  @media (max-width:720px){ .listings { grid-template-columns: 1fr } }
+
+  .card {
+    background:var(--card); border-radius:12px; padding:12px; box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .thumb { width:140px; height:90px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; overflow:hidden }
+  .thumb img{ width:100%; height:100%; object-fit:cover; display:block }
+  .meta { flex:1 }
+  .title{ font-weight:800; font-size:15px; margin:0 }
+  .sub{ color:var(--muted); font-size:13px; margin:6px 0 }
+  .price{ font-weight:900; color:#07304a; margin-top:6px }
+  .card-actions{ display:flex; gap:8px; margin-top:8px; }
+
+  .empty { text-align:center; color:var(--muted); padding:28px; border-radius:8px; background:rgba(15,23,42,0.02) }
+
+  /* modal */
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(2,6,23,0.45); display:none; align-items:center; justify-content:center; z-index:60 }
+  .modal{ width:900px; max-width:96%; background:white; border-radius:12px; padding:18px; box-shadow:0 12px 50px rgba(2,6,23,0.4) }
+  .modal-grid{ display:grid; grid-template-columns: 380px 1fr; gap:12px }
+  @media (max-width:920px){ .modal-grid{ grid-template-columns:1fr } }
+  .close-btn{ background:transparent; border:0; font-weight:800; font-size:18px; cursor:pointer; color:var(--muted) }
+
+  /* small helpers */
+  .muted { color:var(--muted) }
+  .row-s { display:flex; gap:8px; align-items:center }
+  .chip{ background:rgba(15,23,42,0.04); padding:6px 8px; border-radius:8px; font-weight:700; font-size:13px }
+
+  footer{ grid-column:1 / -1; color:var(--muted); font-size:13px; text-align:center; margin-top:18px }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">AM</div>
+        <div>
+          <h1>AutoMarket</h1>
+          <p class="lead">Buy & Sell used vehicles — demo classifieds (local)</p>
+        </div>
+      </div>
+      <div class="row-s">
+        <div class="chip" id="adsCount">0 ads</div>
+      </div>
+    </header>
+
+    <!-- LEFT: Post form + filters -->
+    <aside class="panel">
+      <div>
+        <h3 class="section-title">Post a Vehicle Ad</h3>
+        <form id="adForm">
+          <div style="display:grid; gap:8px;">
+            <div>
+              <label>Title</label>
+              <input type="text" id="title" placeholder="e.g. 2015 Honda City VTI" required>
+            </div>
+
+            <div class="row">
+              <div style="flex:1">
+                <label>Make</label>
+                <input type="text" id="make" placeholder="Honda, Toyota..." required>
+              </div>
+              <div style="width:120px">
+                <label>Year</label>
+                <input type="number" id="year" min="1980" max="2030" placeholder="2015" required>
+              </div>
+            </div>
+
+            <div class="row">
+              <div style="flex:1">
+                <label>Model</label>
+                <input type="text" id="model" placeholder="City, Corolla">
+              </div>
+              <div style="width:140px">
+                <label>KMs</label>
+                <input type="number" id="kms" placeholder="85000">
+              </div>
+            </div>
+
+            <div>
+              <label>Price (₹)</label>
+              <input type="number" id="price" required>
+            </div>
+
+            <div>
+              <label>Image URL (optional)</label>
+              <input type="url" id="image" placeholder="https://...jpg">
+            </div>
+
+            <div>
+              <label>Seller name / contact</label>
+              <input type="text" id="seller" placeholder="Name • phone or email">
+            </div>
+
+            <div>
+              <label>Description</label>
+              <textarea id="description" placeholder="Add additional details, condition and features"></textarea>
+            </div>
+
+            <div style="display:flex; gap:8px; justify-content:space-between; margin-top:6px;">
+              <button type="submit" class="btn-primary">Post Ad</button>
+              <button type="button" class="btn-ghost" onclick="resetForm()">Reset</button>
+              <button id="importSampleBtn" type="button" class="btn-ghost" onclick="importSample()">Add Sample</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <hr style="margin:14px 0; border:none; border-top:1px solid #eef3fb">
+
+      <div>
+        <h4 class="section-title">Search & Filters</h4>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <input id="searchInput" type="text" placeholder="Search title / make / model..." style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8">
+          <select id="filterMake" style="width:120px;padding:8px;border-radius:8px;border:1px solid #e6eef8">
+            <option value="">All makes</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <input id="minYear" type="number" placeholder="Year ≥" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8">
+          <input id="maxYear" type="number" placeholder="Year ≤" style="width:110px;padding:8px;border-radius:8px;border:1px solid #e6eef8">
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <input id="minPrice" type="number" placeholder="Min ₹" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8">
+          <input id="maxPrice" type="number" placeholder="Max ₹" style="width:110px;padding:8px;border-radius:8px;border:1px solid #e6eef8">
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button class="btn-primary" onclick="applyFilters()">Apply</button>
+          <button class="btn-ghost" onclick="clearFilters()">Clear</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Listings -->
+    <main>
+      <section>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 class="section-title">Listings</h3>
+          <div class="mini muted">Click a card to see details</div>
+        </div>
+
+        <div id="listings" class="listings">
+          <!-- ads inserted here -->
+        </div>
+      </section>
+    </main>
+
+    <footer>© AutoMarket — Demo classifieds (data stored locally in your browser)</footer>
+  </div>
+
+  <!-- Modal for view/edit -->
+  <div id="modal" class="modal-backdrop" role="dialog" aria-hidden="true">
+    <div class="modal" role="document">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <h3 id="modalTitle">Ad details</h3>
+        <div>
+          <button class="close-btn" onclick="closeModal()">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-grid" style="margin-top:12px;">
+        <div>
+          <div id="modalImage" class="thumb" style="height:220px; border-radius:8px"></div>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+            <div>
+              <div id="modalMakeModel" style="font-weight:900; font-size:18px"></div>
+              <div id="modalYearKms" class="muted" style="margin-top:6px"></div>
+            </div>
+            <div style="text-align:right">
+              <div id="modalPrice" style="font-weight:900; font-size:18px; color:#07304a"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div id="modalDesc" class="muted"></div>
+            <div style="margin-top:8px" id="modalSeller"></div>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-top:12px">
+            <button class="btn-primary" onclick="contactSeller()">Contact Seller</button>
+            <button class="btn-ghost" onclick="startEdit()">Edit</button>
+            <button class="btn-danger" onclick="deleteCurrentAd()">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* --------- Storage keys & state --------- */
+const STORAGE_KEY = 'automarket_ads_v1';
+let ADS = [];              // list of ad objects
+let currentViewAdId = null;
+
+/* ad structure:
+ {
+  id: 'ad_xxx',
+  title, make, model, year, kms, price, image, description, seller, createdAt
+ }
+*/
+
+/* ---------- Utilities ---------- */
+function uid(prefix='id'){ return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function $(id){ return document.getElementById(id); }
+function saveAds(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(ADS)); updateUI(); }
+function loadAds(){ try{ ADS = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ ADS = []; } updateUI(); }
+function formatMoney(n){ return '₹' + Number(n).toLocaleString('en-IN'); }
+
+/* ---------- Form handling ---------- */
+document.getElementById('adForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const ad = {
+    id: uid('ad'),
+    title: $('title').value.trim(),
+    make: $('make').value.trim(),
+    model: $('model').value.trim(),
+    year: Number($('year').value) || null,
+    kms: $('kms').value ? Number($('kms').value) : null,
+    price: Number($('price').value) || 0,
+    image: $('image').value.trim(),
+    description: $('description').value.trim(),
+    seller: $('seller').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  ADS.unshift(ad); // newest first
+  saveAds();
+  this.reset();
+  populateMakeFilter();
+  alert('Ad posted ✅');
+});
+
+/* reset form */
+function resetForm(){ document.getElementById('adForm').reset(); }
+
+/* import a sample ad */
+function importSample(){
+  const sample = {
+    id: uid('ad'),
+    title: '2016 Maruti Suzuki Swift VXI',
+    make: 'Maruti',
+    model: 'Swift VXI',
+    year: 2016,
+    kms: 62000,
+    price: 420000,
+    image: '',
+    description: 'Well maintained, single owner, service history available. No major accidents.',
+    seller: 'Ravi • 90000 11111',
+    createdAt: new Date().toISOString()
+  };
+  ADS.unshift(sample);
+  saveAds();
+  populateMakeFilter();
+  alert('Sample ad added');
+}
+
+/* ---------- Listings rendering ---------- */
+function updateUI(){
+  // ads count
+  $('adsCount').textContent = ADS.length + ' ads';
+
+  // listings grid
+  const container = $('listings');
+  container.innerHTML = '';
+  const filtered = applyCurrentSearchFilterToAds(ADS);
+  if(filtered.length === 0){
+    container.innerHTML = '<div class="empty">No listings found</div>';
+  } else {
+    filtered.forEach(ad => container.appendChild(createCard(ad)));
+  }
+  populateMakeFilter();
+}
+
+/* create card element */
+function createCard(ad){
+  const el = document.createElement('div');
+  el.className = 'card';
+  const img = ad.image ? `<img src="${ad.image}" alt="${escapeHtml(ad.title)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">${escapeHtml(ad.make)}</div>`;
+  el.innerHTML = `
+    <div class="thumb">${img}</div>
+    <div class="meta">
+      <div class="title">${escapeHtml(ad.title)}</div>
+      <div class="sub">${escapeHtml(ad.make)} • ${escapeHtml(ad.model || '')} • ${ad.year || ''} • ${ad.kms ? ad.kms + ' km' : ''}</div>
+      <div class="price">${formatMoney(ad.price)}</div>
+      <div class="card-actions">
+        <button class="btn-ghost" onclick="viewAd('${ad.id}')">View</button>
+        <button class="btn-ghost" onclick="startEdit('${ad.id}')">Edit</button>
+        <button class="btn-danger" onclick="deleteAdPrompt('${ad.id}')">Delete</button>
+      </div>
+    </div>
+  `;
+  return el;
+}
+
+/* ---------- View / Modal ---------- */
+function viewAd(id){
+  const ad = ADS.find(a=>a.id===id);
+  if(!ad) return alert('Ad not found');
+  currentViewAdId = id;
+  $('modalTitle').textContent = ad.title;
+  $('modalImage').innerHTML = ad.image ? `<img src="${ad.image}" alt="${escapeHtml(ad.title)}" style="width:100%;height:100%;object-fit:cover">` : '<div class="muted" style="padding:12px">No image</div>';
+  $('modalMakeModel').textContent = `${ad.make} ${ad.model||''}`;
+  $('modalYearKms').textContent = `${ad.year||''} • ${ad.kms?ad.kms+' km':''}`;
+  $('modalPrice').textContent = formatMoney(ad.price);
+  $('modalDesc').textContent = ad.description || '';
+  $('modalSeller').innerHTML = `<div style="margin-top:8px"><strong>Seller:</strong> ${escapeHtml(ad.seller||'')}</div><div class="muted" style="margin-top:6px">Posted: ${new Date(ad.createdAt).toLocaleString()}</div>`;
+  openModal();
+}
+
+function openModal(){ const m = $('modal'); m.style.display='flex'; m.setAttribute('aria-hidden','false'); }
+function closeModal(){ const m = $('modal'); m.style.display='none'; m.setAttribute('aria-hidden','true'); currentViewAdId = null; }
+
+/* ---------- Edit / Delete ---------- */
+function startEdit(id){
+  // if id provided, populate form with ad and scroll to form
+  const ad = ADS.find(a=>a.id===id);
+  if(!ad) return alert('Ad not found');
+  // populate
+  $('title').value = ad.title;
+  $('make').value = ad.make;
+  $('model').value = ad.model || '';
+  $('year').value = ad.year || '';
+  $('kms').value = ad.kms || '';
+  $('price').value = ad.price || '';
+  $('image').value = ad.image || '';
+  $('description').value = ad.description || '';
+  $('seller').value = ad.seller || '';
+  // remove old ad (we will re-add on submit)
+  ADS = ADS.filter(a=>a.id !== id);
+  saveAds();
+  // scroll to top (form)
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  closeModal();
+}
+
+function deleteAdPrompt(id){
+  if(!confirm('Delete this ad? This cannot be undone')) return;
+  ADS = ADS.filter(a=>a.id !== id);
+  saveAds();
+  closeModal();
+}
+
+function deleteCurrentAd(){
+  if(!currentViewAdId) return;
+  deleteAdPrompt(currentViewAdId);
+}
+
+/* ---------- Filters & Search ---------- */
+function populateMakeFilter(){
+  const makes = Array.from(new Set(ADS.map(a=>a.make).filter(Boolean))).sort();
+  const sel = $('filterMake');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All makes</option>';
+  makes.forEach(mk => sel.innerHTML += `<option value="${escapeHtml(mk)}">${escapeHtml(mk)}</option>`);
+  if(makes.includes(cur)) sel.value = cur;
+}
+
+function applyFilters(){
+  updateUI();
+}
+
+function clearFilters(){
+  $('searchInput').value = '';
+  $('filterMake').value = '';
+  $('minYear').value = '';
+  $('maxYear').value = '';
+  $('minPrice').value = '';
+  $('maxPrice').value = '';
+  updateUI();
+}
+
+/* search + filter applied to ads list */
+function applyCurrentSearchFilterToAds(list){
+  let out = list.slice();
+  const q = $('searchInput').value.trim().toLowerCase();
+  if(q) out = out.filter(a => (a.title||'').toLowerCase().includes(q) || (a.make||'').toLowerCase().includes(q) || (a.model||'').toLowerCase().includes(q) );
+
+  const make = $('filterMake').value;
+  if(make) out = out.filter(a => (a.make||'') === make);
+
+  const minY = Number($('minYear').value) || 0;
+  const maxY = Number($('maxYear').value) || 9999;
+  out = out.filter(a => { const y = Number(a.year) || 0; return y >= minY && y <= maxY; });
+
+  const minP = Number($('minPrice').value) || 0;
+  const maxP = Number($('maxPrice').value) || 1e12;
+  out = out.filter(a => { const p = Number(a.price) || 0; return p >= minP && p <= maxP; });
+
+  return out;
+}
+
+/* ---------- Local storage load on start ---------- */
+loadAds();
+
+/* search input live */
+$('searchInput').addEventListener('input', () => updateUI());
+
+/* ---------- Contact seller handler (opens mailto if available) ---------- */
+function contactSeller(){
+  if(!currentViewAdId) return;
+  const ad = ADS.find(a=>a.id===currentViewAdId);
+  if(!ad) return;
+  // if seller string contains '@' assume email, if contains digits assume phone
+  const s = ad.seller || '';
+  if(s.includes('@')){
+    window.location.href = 'mailto:' + s;
+  } else {
+    alert('Seller contact: ' + s + '\\n(You can call or message this number.)');
+  }
+}
+
+/* ---------- small safety helpers ---------- */
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+/* make sure sample data exists to demo if none present */
+(function seedIfEmpty(){
+  if(localStorage.getItem(STORAGE_KEY)) return;
+  ADS = [
+    { id: uid('ad'), title:'2014 Toyota Innova VX', make:'Toyota', model:'Innova VX', year:2014, kms:120000, price:620000, image:'', description:'Comfortable family vehicle, well maintained.', seller:'Amit • 9000011111', createdAt:new Date().toISOString() },
+    { id: uid('ad'), title:'2018 Hyundai i20 Asta', make:'Hyundai', model:'i20', year:2018, kms:45000, price:475000, image:'', description:'Single owner, good condition, service history.', seller:'Priya • priya@example.com', createdAt:new Date().toISOString() }
+  ];
+  saveAds();
+})();
+</script>
+</body>
+</html>

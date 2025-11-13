@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>3 Page To-Do App</title>
+
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #eef2ff;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        width: 360px;
+        margin: 40px auto;
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background: #3b82f6;
+        border: none;
+        color: white;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+
+    button:hover {
+        background: #2563eb;
+    }
+
+    .link-btn {
+        background: #10b981;
+    }
+
+    .link-btn:hover {
+        background: #059669;
+    }
+
+    .logout-btn {
+        background: #ef4444;
+    }
+
+    .logout-btn:hover {
+        background: #dc2626;
+    }
+
+    .page {
+        display: none;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    li {
+        background: #e2e8f0;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- =========================== -->
+<!-- PAGE 1 - LOGIN PAGE         -->
+<!-- =========================== -->
+<div id="page1" class="page">
+    <h2>Login</h2>
+
+    <label>Username</label>
+    <input type="text" id="loginUser" placeholder="Enter username">
+
+    <label>Password</label>
+    <input type="password" id="loginPass" placeholder="Enter password">
+
+    <button onclick="login()">Login</button>
+</div>
+
+
+<!-- =========================== -->
+<!-- PAGE 2 - ADD TASK PAGE      -->
+<!-- =========================== -->
+<div id="page2" class="page">
+    <h2>Add Task</h2>
+
+    <p>Welcome <b><span id="usernameText"></span></b></p>
+
+    <input type="text" id="taskInput" placeholder="Enter new task">
+
+    <button onclick="addTask()">Add Task</button>
+    <button class="link-btn" onclick="goToTasks()">Go to Task List</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+
+<!-- =========================== -->
+<!-- PAGE 3 - TASK LIST PAGE     -->
+<!-- =========================== -->
+<div id="page3" class="page">
+    <h2>Your Tasks</h2>
+
+    <ul id="taskList"></ul>
+
+    <button class="link-btn" onclick="showPage(2)">Add More Tasks</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+</div>
+
+<script>
+// Show specific page
+function showPage(n) {
+    document.getElementById("page1").style.display = "none";
+    document.getElementById("page2").style.display = "none";
+    document.getElementById("page3").style.display = "none";
+    document.getElementById("page" + n).style.display = "block";
+}
+
+// LOGIN FUNCTION
+function login() {
+    let user = document.getElementById("loginUser").value;
+    let pass = document.getElementById("loginPass").value;
+
+    if (user.trim() === "" || pass.trim() === "") {
+        alert("Please enter username and password");
+        return;
+    }
+
+    localStorage.setItem("currentUser", user);
+    document.getElementById("usernameText").innerText = user;
+
+    showPage(2);  // go to Add Task page
+}
+
+// ADD TASK
+function addTask() {
+    let task = document.getElementById("taskInput").value;
+
+    if (task.trim() === "") {
+        alert("Enter a task!");
+        return;
+    }
+
+    let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+    tasks.push(task);
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+
+    alert("Task Added!");
+    document.getElementById("taskInput").value = "";
+}
+
+// SHOW TASK PAGE
+function goToTasks() {
+    let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+    let list = document.getElementById("taskList");
+
+    list.innerHTML = "";
+
+    tasks.forEach(t => {
+        list.innerHTML += `<li>${t}</li>`;
+    });
+
+    showPage(3);
+}
+
+// LOGOUT
+function logout() {
+    localStorage.removeItem("currentUser");
+    showPage(1);
+}
+
+// Always start on Login Page first
+showPage(1);
+
+</script>
+
+</body>
+</html>

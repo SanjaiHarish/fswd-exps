@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>QuickCart — Grocery Delivery</title>
+<style>
+  :root{
+    --bg:#f6f8f9; --card:#ffffff; --muted:#6b7280; --accent:#0ea5e9; --accent-2:#2563eb;
+    --success:#10b981; --danger:#ef4444; --radius:12px; --max-w:1100px;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:linear-gradient(180deg,#fbfeff,#f6f8fa); color:#0f1724;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    padding:20px; display:flex; justify-content:center;
+  }
+  .app{ width:100%; max-width:var(--max-w); }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;
+  }
+  .brand{ display:flex; gap:12px; align-items:center; }
+  .logo{ width:56px; height:56px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex; align-items:center; justify-content:center; color:white; font-weight:800; font-size:20px; }
+  h1{ margin:0; font-size:20px; }
+  .lead{ color:var(--muted); font-size:13px; margin:0 }
+
+  main{ display:grid; grid-template-columns: 320px 1fr 360px; gap:16px; align-items:start; }
+  @media (max-width:1080px){ main{ grid-template-columns: 1fr; } .right-col{ order: 3 } .left-col{ order:1 } .center-col{ order:2 } }
+
+  /* Left: supermarkets */
+  .card{ background:var(--card); padding:14px; border-radius:var(--radius); box-shadow:0 8px 30px rgba(2,6,23,0.06); }
+  .super-list{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+  .super-item{ display:flex; gap:10px; align-items:center; padding:10px; border-radius:10px; cursor:pointer; border:1px solid transparent; transition:all .14s; }
+  .super-item:hover{ transform:translateY(-3px); box-shadow:0 10px 30px rgba(2,6,23,0.04); }
+  .super-item.active{ border-color:rgba(37,99,235,0.12); box-shadow:0 12px 35px rgba(37,99,235,0.06); }
+  .super-avatar{ width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,#eef2ff,#e0f2fe);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent) }
+
+  /* Center: products */
+  .search-row{ display:flex; gap:10px; margin-bottom:12px; }
+  .search-row input{ flex:1; padding:10px;border-radius:10px;border:1px solid #e6eef8; }
+  .product-grid{ display:grid; grid-template-columns: repeat(2,1fr); gap:12px; }
+  @media (max-width:720px){ .product-grid{ grid-template-columns:1fr; } }
+
+  .product{
+    display:flex; gap:12px; align-items:flex-start; border-radius:12px;padding:12px;border:1px solid rgba(2,6,23,0.03);
+    background:linear-gradient(180deg,#fff,#fbfdff);
+  }
+  .prod-photo{ width:86px;height:86px;border-radius:10px;background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--muted) }
+  .prod-body{ flex:1 }
+  .prod-title{ font-weight:700; margin:0 0 6px 0; font-size:15px }
+  .prod-desc{ margin:0; color:var(--muted); font-size:13px }
+  .prod-footer{ margin-top:8px; display:flex; justify-content:space-between; align-items:center; gap:8px }
+  .price{ font-weight:800; color:#07304a }
+  .btn{ padding:8px 12px; border-radius:8px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:white; border:0; cursor:pointer; font-weight:700 }
+  .btn.ghost{ background:transparent; color:var(--accent); border:1px solid rgba(37,99,235,0.12) }
+
+  /* Right: cart & checkout */
+  .cart-list{ display:flex; flex-direction:column; gap:10px; margin-top:10px; max-height:420px; overflow:auto; padding-right:6px; }
+  .cart-item{ display:flex; gap:10px; align-items:center; padding:10px; border-radius:10px; background:#f8fafc; border:1px solid #e6eef8; }
+  .cart-item .ci-left{ flex:1 }
+  .qty{ display:inline-flex; gap:6px; align-items:center; background:#fff; border-radius:8px; padding:6px; border:1px solid #e6eef8 }
+  .small{ font-size:13px; color:var(--muted) }
+  .total-row{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-weight:800; font-size:16px }
+
+  /* forms */
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+  input[type="text"], input[type="email"], input[type="tel"]{ padding:10px;border-radius:8px;border:1px solid #e6eef8; }
+
+  footer{ margin-top:18px; color:var(--muted); font-size:13px; text-align:center; }
+
+  /* badges */
+  .badge{ padding:6px 8px; background:rgba(15,23,42,0.04); border-radius:8px; font-weight:700; font-size:13px; }
+
+  /* tiny responsive */
+  @media (max-width:520px){ header{flex-direction:column; align-items:flex-start; gap:8px} .logo{width:48px;height:48px} }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">QC</div>
+        <div>
+          <h1>QuickCart</h1>
+          <p class="lead">Order groceries from nearby supermarkets — demo (HTML/CSS/JS)</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div class="badge" id="selected-super">No supermarket</div>
+        <div class="small">Contact: <strong>+91 90000 00000</strong></div>
+      </div>
+    </header>
+
+    <main>
+      <!-- LEFT: supermarkets -->
+      <aside class="left-col card">
+        <h3>Supermarkets</h3>
+        <div class="super-list" id="superList">
+          <!-- Filled by JS -->
+        </div>
+      </aside>
+
+      <!-- CENTER: products -->
+      <section class="center-col card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="margin:0">Products</h3>
+            <div class="small" id="super-desc">Choose a supermarket to see products</div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="search" placeholder="Search products..." style="padding:8px;border-radius:8px;border:1px solid #e6eef8">
+            <button class="btn ghost" onclick="clearCart()">Clear Cart</button>
+          </div>
+        </div>
+
+        <div id="productGrid" class="product-grid" style="margin-top:12px;">
+          <!-- Filled by JS -->
+        </div>
+      </section>
+
+      <!-- RIGHT: cart & checkout -->
+      <aside class="right-col card">
+        <h3>Cart</h3>
+        <div id="cartList" class="cart-list">
+          <p class="small">Your cart is empty</p>
+        </div>
+
+        <div class="total-row">
+          <div>Total</div>
+          <div id="totalAmount">₹0</div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7">
+
+        <h4 style="margin:0 0 8px 0">Delivery details</h4>
+        <form id="orderForm" onsubmit="placeOrder(event)">
+          <div class="field"><label class="small">Name</label><input type="text" id="custName" required></div>
+          <div class="field"><label class="small">Phone</label><input type="tel" id="custPhone" required></div>
+          <div class="field"><label class="small">Address</label><input type="text" id="custAddress" required></div>
+          <div style="display:flex; gap:8px;">
+            <button type="submit" class="btn" id="checkoutBtn">Place Order</button>
+            <button type="button" class="btn ghost" onclick="saveCart()">Save Cart</button>
+          </div>
+        </form>
+
+        <div style="margin-top:12px;">
+          <div class="small">Saved orders: <span id="ordersCount">0</span></div>
+          <button class="btn ghost" style="margin-top:8px;" onclick="showSavedOrders()">View Orders</button>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      © QuickCart — Demo grocery delivery site (local only)
+    </footer>
+  </div>
+
+<script>
+/* Sample data: supermarkets and products */
+const SUPERMARKETS = [
+  { id: 's1', name: 'FreshMart', desc: 'Fresh fruits, vegetables & pantry staples' },
+  { id: 's2', name: 'DailyBazaar', desc: 'Household groceries & essentials' },
+  { id: 's3', name: 'GreenGrocer', desc: 'Organic & health-focused products' }
+];
+
+const PRODUCTS = {
+  s1: [
+    { id:'p1', name:'Bananas (1kg)', price:79, desc:'Ripe Cavendish bananas' },
+    { id:'p2', name:'Whole Milk (1L)', price:65, desc:'Full cream milk' },
+    { id:'p3', name:'Brown Eggs (6 pcs)', price:95, desc:'Farm-fresh eggs' },
+    { id:'p4', name:'Tomato (1kg)', price:49, desc:'Red tomatoes' }
+  ],
+  s2: [
+    { id:'p5', name:'Rice (5kg)', price:399, desc:'Basmati / Sela options' },
+    { id:'p6', name:'Wheat Flour (1kg)', price:55, desc:'Atta, fine' },
+    { id:'p7', name:'Cooking Oil (1L)', price:199, desc:'Refined oil' },
+    { id:'p2', name:'Whole Milk (1L)', price:65, desc:'Full cream milk' } // duplicate id intentionally shared across markets for demo
+  ],
+  s3: [
+    { id:'p8', name:'Quinoa (500g)', price:249, desc:'Organic quinoa' },
+    { id:'p9', name:'Almonds (250g)', price:349, desc:'Natural almonds' },
+    { id:'p10', name:'Olive Oil (500ml)', price:599, desc:'Extra virgin' },
+    { id:'p4', name:'Tomato (1kg)', price:69, desc:'Organic tomatoes' }
+  ]
+};
+
+/* App state */
+let selectedSuper = null;
+let cart = []; // items: {superId, productId, name, price, qty}
+const CART_KEY = 'qc_cart_v1';
+const ORDERS_KEY = 'qc_orders_v1';
+
+/* Init UI */
+function init(){
+  renderSupermarkets();
+  loadCart();
+  updateOrdersCount();
+  document.getElementById('search').addEventListener('input', () => renderProducts());
+}
+init();
+
+/* Render supermarkets list */
+function renderSupermarkets(){
+  const container = document.getElementById('superList');
+  container.innerHTML = '';
+  SUPERMARKETS.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'super-item';
+    el.id = 'super-'+s.id;
+    el.innerHTML = `<div class="super-avatar">${s.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+                    <div style="flex:1"><div style="font-weight:800">${s.name}</div><div class="small">${s.desc}</div></div>`;
+    el.addEventListener('click', () => selectSupermarket(s.id));
+    container.appendChild(el);
+  });
+}
+
+/* Select supermarket */
+function selectSupermarket(id){
+  selectedSuper = id;
+  // highlight
+  document.querySelectorAll('.super-item').forEach(it => it.classList.remove('active'));
+  const sel = document.getElementById('super-'+id);
+  if(sel) sel.classList.add('active');
+  // update header
+  const s = SUPERMARKETS.find(x=>x.id===id);
+  document.getElementById('selected-super').textContent = s.name;
+  document.getElementById('super-desc').textContent = s.desc;
+  // clear search
+  document.getElementById('search').value='';
+  renderProducts();
+}
+
+/* Render products for selected supermarket */
+function renderProducts(){
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = '';
+  if(!selectedSuper){
+    grid.innerHTML = '<p class="small">Please choose a supermarket from left to view products.</p>';
+    return;
+  }
+  const all = PRODUCTS[selectedSuper] || [];
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const filtered = all.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+  if(filtered.length===0){
+    grid.innerHTML = '<p class="small">No products found.</p>'; return;
+  }
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'product';
+    card.innerHTML = `
+      <div class="prod-photo">${(p.name.split(' ')[0]||'P').slice(0,2)}</div>
+      <div class="prod-body">
+        <div class="prod-title">${p.name}</div>
+        <div class="prod-desc">${p.desc}</div>
+        <div class="prod-footer">
+          <div class="price">₹${p.price}</div>
+          <div style="display:flex; gap:8px; align-items:center">
+            <input type="number" min="1" value="1" id="qty-${p.id}" style="width:70px;padding:6px;border-radius:8px;border:1px solid #e6eef8">
+            <button class="btn" onclick="addToCart('${selectedSuper}','${p.id}','${escapeHtml(p.name)}',${p.price})">Add</button>
+          </div>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* Add to cart */
+function addToCart(superId, productId, name, price){
+  const qtyInput = document.getElementById('qty-'+productId);
+  const qty = Math.max(1, Number(qtyInput ? qtyInput.value : 1));
+  // If cart has items from another supermarket, ask to clear or keep? We'll enforce same supermarket per cart for simplicity.
+  if(cart.length>0 && cart[0].superId !== superId){
+    if(!confirm('Your cart contains items from another supermarket. Clear cart and add items from this supermarket?')) return;
+    cart = [];
+  }
+  const existing = cart.find(it => it.productId === productId);
+  if(existing){
+    existing.qty += qty;
+  } else {
+    cart.push({ superId, productId, name, price, qty });
+  }
+  saveCart();
+  renderCart();
+}
+
+/* Render cart */
+function renderCart(){
+  const container = document.getElementById('cartList');
+  container.innerHTML = '';
+  if(cart.length===0){
+    container.innerHTML = '<p class="small">Your cart is empty</p>';
+    document.getElementById('totalAmount').textContent = '₹0';
+    return;
+  }
+  cart.forEach((it, idx) => {
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.innerHTML = `
+      <div class="ci-left">
+        <div style="font-weight:800">${it.name}</div>
+        <div class="small">₹${it.price} • subtotal ₹${it.price * it.qty}</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px">
+        <div class="qty">
+          <button onclick="changeQty(${idx}, -1)" style="background:transparent;border:0;cursor:pointer">−</button>
+          <div style="min-width:22px;text-align:center">${it.qty}</div>
+          <button onclick="changeQty(${idx}, 1)" style="background:transparent;border:0;cursor:pointer">+</button>
+        </div>
+        <button class="btn ghost" style="padding:6px 8px" onclick="removeItem(${idx})">Remove</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+  updateTotal();
+}
+
+/* change qty */
+function changeQty(index, delta){
+  cart[index].qty = Math.max(1, cart[index].qty + delta);
+  saveCart();
+  renderCart();
+}
+
+/* remove item */
+function removeItem(index){
+  cart.splice(index,1);
+  saveCart();
+  renderCart();
+}
+
+/* update total */
+function updateTotal(){
+  const total = cart.reduce((s,i)=>s + i.price * i.qty, 0);
+  document.getElementById('totalAmount').textContent = `₹${total}`;
+}
+
+/* save/load cart to localStorage */
+function saveCart(){
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  renderCart();
+}
+function loadCart(){
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    cart = raw ? JSON.parse(raw) : [];
+  } catch(e){ cart = []; }
+  renderCart();
+}
+
+/* clear cart */
+function clearCart(){
+  if(!confirm('Clear cart?')) return;
+  cart = [];
+  saveCart();
+  renderCart();
+}
+
+/* place order */
+function placeOrder(e){
+  e.preventDefault();
+  if(cart.length===0){ alert('Cart is empty'); return; }
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  if(!name || !phone || !address){ alert('Please fill delivery details'); return; }
+
+  const order = {
+    id: 'ORD' + Date.now().toString(36),
+    supermarket: SUPERMARKETS.find(s=>s.id===cart[0].superId)?.name || '',
+    items: cart.slice(),
+    total: cart.reduce((s,i)=>s + i.price * i.qty, 0),
+    customer: { name, phone, address },
+    createdAt: new Date().toISOString()
+  };
+  // save order
+  const orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+  orders.push(order);
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+  // clear cart
+  cart = []; saveCart();
+  updateOrdersCount();
+  alert('Order placed! Order ID: ' + order.id);
+  document.getElementById('orderForm').reset();
+}
+
+/* view saved orders */
+function showSavedOrders(){
+  const orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+  if(orders.length===0){ alert('No saved orders'); return; }
+  let msg = 'Saved Orders:\\n\\n';
+  orders.slice().reverse().forEach(o=>{
+    msg += `${o.id} — ${o.supermarket} — ₹${o.total} — ${new Date(o.createdAt).toLocaleString()}\\n`;
+  });
+  alert(msg);
+}
+
+/* update orders count */
+function updateOrdersCount(){
+  const orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+  document.getElementById('ordersCount').textContent = orders.length;
+}
+
+/* helper: escape html for product names used in attributes */
+function escapeHtml(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* initial dummy selection: pick first supermarket */
+setTimeout(()=>{ if(SUPERMARKETS.length>0) selectSupermarket(SUPERMARKETS[0].id); }, 50);
+</script>
+</body>
+</html>

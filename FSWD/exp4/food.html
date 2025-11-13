@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodExpress 🍔</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      margin: 0;
+      background: url('https://images.unsplash.com/photo-1606756790138-2438bfa8f3f4?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+      background-size: cover;
+      backdrop-filter: blur(6px);
+    }
+    header {
+      background: rgba(244, 38, 38, 0.9);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .container {
+      width: 90%;
+      max-width: 1000px;
+      margin: 30px auto;
+      background: rgba(255,255,255,0.9);
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      padding: 25px;
+    }
+    h2 { color: #ff4d4d; text-align: center; margin-bottom: 20px; }
+    .restaurant-list, .menu-list, .cart-section { display: none; }
+    .restaurant {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      transition: 0.3s;
+    }
+    .restaurant:hover { transform: scale(1.02); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+    .restaurant img {
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
+      object-fit: cover;
+      margin-right: 15px;
+    }
+    .restaurant h3 { margin: 0; color: #e11d48; }
+    .restaurant button {
+      margin-left: auto;
+      padding: 8px 18px;
+      border: none;
+      border-radius: 20px;
+      background: #ff4d4d;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .restaurant button:hover { background: #e11d48; transform: scale(1.05); }
+    .menu-item {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .menu-item button {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 15px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .menu-item button:hover { background: #e11d48; transform: scale(1.05); }
+    .cart {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      font-weight: 500;
+    }
+    .place-order {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      float: right;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .place-order:hover { background: #218838; transform: scale(1.05); }
+    .back-btn {
+      background: #555;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      transition: 0.3s;
+    }
+    .back-btn:hover { background: #333; transform: scale(1.05); }
+    #countdownTimer {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #e11d48;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>FoodExpress 🍔</header>
+
+<div class="container">
+  <!-- Restaurant List -->
+  <div id="restaurantList" class="restaurant-list">
+    <h2>Choose Your Restaurant</h2>
+    <div class="restaurant">
+      <img src="https://images.unsplash.com/photo-1600891964092-4316c288032e" alt="Pizza Place">
+      <div>
+        <h3>Pizza Palace</h3>
+        <p>Delicious pizzas, pasta & garlic bread</p>
+      </div>
+      <button onclick="openMenu('Pizza Palace')">View Menu</button>
+    </div>
+
+    <div class="restaurant">
+      <img src="https://images.unsplash.com/photo-1551218808-94e220e084d2" alt="Burger House">
+      <div>
+        <h3>Burger Hub</h3>
+        <p>Juicy burgers, fries & shakes</p>
+      </div>
+      <button onclick="openMenu('Burger Hub')">View Menu</button>
+    </div>
+
+    <div class="restaurant">
+      <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1" alt="Indian Spice">
+      <div>
+        <h3>Indian Spice</h3>
+        <p>Authentic Indian thalis & biryani</p>
+      </div>
+      <button onclick="openMenu('Indian Spice')">View Menu</button>
+    </div>
+  </div>
+
+  <!-- Menu List -->
+  <div id="menuList" class="menu-list">
+    <button class="back-btn" onclick="showRestaurants()">← Back</button>
+    <h2 id="menuTitle"></h2>
+    <div id="menuItems"></div>
+    <hr>
+    <button onclick="viewCart()" class="place-order" style="background:#ff4d4d;">View Cart 🛒</button>
+  </div>
+
+  <!-- Cart Section -->
+  <div id="cartSection" class="cart-section">
+    <button class="back-btn" onclick="backToMenu()">← Back to Menu</button>
+    <h2>Your Cart 🛒</h2>
+    <div class="cart" id="cartItems"></div>
+    <div id="countdownTimer"></div>
+    <hr>
+    <button class="place-order" onclick="placeOrder()">Place Order ✅</button>
+  </div>
+</div>
+
+<script>
+const restaurants = {
+  "Pizza Palace": [
+    { name: "Margherita Pizza", price: 250 },
+    { name: "Veggie Delight Pizza", price: 300 },
+    { name: "Cheese Garlic Bread", price: 120 }
+  ],
+  "Burger Hub": [
+    { name: "Classic Chicken Burger", price: 180 },
+    { name: "Veg Supreme Burger", price: 150 },
+    { name: "Crispy Fries", price: 90 }
+  ],
+  "Indian Spice": [
+    { name: "Veg Thali", price: 200 },
+    { name: "Chicken Biryani", price: 220 },
+    { name: "Paneer Butter Masala", price: 180 }
+  ]
+};
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let currentRestaurant = "";
+let countdownInterval;
+
+function showRestaurants() {
+  document.getElementById("restaurantList").style.display = "block";
+  document.getElementById("menuList").style.display = "none";
+  document.getElementById("cartSection").style.display = "none";
+  clearCountdown();
+}
+
+function openMenu(restaurantName) {
+  currentRestaurant = restaurantName;
+  document.getElementById("restaurantList").style.display = "none";
+  document.getElementById("menuList").style.display = "block";
+  document.getElementById("cartSection").style.display = "none";
+
+  document.getElementById("menuTitle").innerText = restaurantName + " Menu";
+  const menuItems = restaurants[restaurantName];
+  let html = "";
+  menuItems.forEach(item => {
+    html += `
+      <div class="menu-item">
+        <div>${item.name} - ₹${item.price}</div>
+        <button onclick="addToCart('${item.name}', ${item.price})">Add</button>
+      </div>`;
+  });
+  document.getElementById("menuItems").innerHTML = html;
+}
+
+function addToCart(name, price) {
+  cart.push({ restaurant: currentRestaurant, name, price });
+  localStorage.setItem("cart", JSON.stringify(cart));
+  alert(`${name} added to cart!`);
+}
+
+function viewCart() {
+  document.getElementById("menuList").style.display = "none";
+  document.getElementById("cartSection").style.display = "block";
+  displayCart();
+}
+
+function displayCart() {
+  const cartDiv = document.getElementById("cartItems");
+  if (cart.length === 0) {
+    cartDiv.innerHTML = "<p>Your cart is empty!</p>";
+    document.getElementById("countdownTimer").textContent = "";
+    return;
+  }
+  let total = 0;
+  cartDiv.innerHTML = "";
+  cart.forEach((item, index) => {
+    total += item.price;
+    cartDiv.innerHTML += `
+      <div class="cart-item">
+        <span>${item.name} (${item.restaurant})</span>
+        <span>₹${item.price} <button onclick="removeItem(${index})" style="color:red;border:none;background:none;cursor:pointer;">✖</button></span>
+      </div>`;
+  });
+  cartDiv.innerHTML += `<hr><h3>Total: ₹${total}</h3>`;
+}
+
+function removeItem(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  displayCart();
+}
+
+function clearCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  document.getElementById("countdownTimer").textContent = "";
+}
+
+function placeOrder() {
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+  const deliveryMinutes = Math.floor(Math.random() * 21) + 20;
+  const deliveryTime = new Date();
+  deliveryTime.setMinutes(deliveryTime.getMinutes() + deliveryMinutes);
+  alert(`✅ Order placed successfully!  
+Your food will arrive in approx. ${deliveryMinutes} minutes (around ${deliveryTime.toLocaleTimeString()}) 🍱`);
+  cart = [];
+  localStorage.setItem("cart", JSON.stringify(cart));
+  showRestaurants();
+  countdownInterval = setInterval(() => {
+    const now = new Date();
+    const diff = deliveryTime - now;
+    if (diff <= 0) {
+      document.getElementById("countdownTimer").textContent = "🎉 Your food has arrived!";
+      clearInterval(countdownInterval);
+      return;
+    }
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    document.getElementById("countdownTimer").textContent = `⏱️ Delivery in ${mins} min ${secs} sec`;
+  }, 1000);
+}
+
+function backToMenu() {
+  document.getElementById("cartSection").style.display = "none";
+  document.getElementById("menuList").style.display = "block";
+}
+
+showRestaurants();
+</script>
+</body>
+</html>

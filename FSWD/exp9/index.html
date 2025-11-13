@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Home Services — Choose & Book</title>
+
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --accent2:#06b6d4;
+    --radius:14px; font-family:Arial, Helvetica, sans-serif;
+  }
+  body{ margin:0; background:#eef3ff; padding:25px; }
+  h2{ text-align:center; }
+  .site{ max-width:1100px; margin:auto; display:grid; grid-template-columns:1fr 350px; gap:20px; }
+  .card{ background:white; padding:16px; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+  .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  .svc{
+    background:#fff; padding:12px; border-radius:12px; display:flex; gap:12px;
+    border:1px solid #ddd; cursor:pointer; transition:.2s;
+  }
+  .svc:hover{ border-color:#2563eb; }
+  .thumb{ width:70px; height:70px; background:#e0edff; border-radius:10px; display:flex;
+          align-items:center; justify-content:center; font-weight:bold; color:#2563eb; font-size:18px; }
+  .selected-box{ min-height:200px; }
+  .selected-item{
+      background:#e8ffe8; padding:12px; border-left:5px solid #14a44d;
+      margin-top:10px; border-radius:10px;
+      font-size:14px;
+  }
+  .empty-msg{ color:#777; text-align:center; }
+</style>
+</head>
+
+<body>
+
+<h2>🏡 Home Services — Choose Your Services</h2>
+
+<div class="site">
+
+  <!-- LEFT SIDE SERVICES -->
+  <div class="card">
+    <h3>Select Services</h3>
+
+    <div class="grid">
+
+      <div class="svc" onclick="addService('Full Home Cleaning','₹1499')">
+        <div class="thumb">CL</div>
+        <div><b>Full Home Cleaning</b><br><small>From ₹1499</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('AC Service & Repair','₹999')">
+        <div class="thumb">AC</div>
+        <div><b>AC Service & Repair</b><br><small>From ₹999</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('Plumbing Work','₹499')">
+        <div class="thumb">PL</div>
+        <div><b>Plumbing Work</b><br><small>From ₹499</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('Pest Control','₹1199')">
+        <div class="thumb">PS</div>
+        <div><b>Pest Control</b><br><small>From ₹1199</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('Electrical Repair','₹399')">
+        <div class="thumb">EL</div>
+        <div><b>Electrical Repair</b><br><small>From ₹399</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('Carpentry Service','₹799')">
+        <div class="thumb">CR</div>
+        <div><b>Carpentry Service</b><br><small>From ₹799</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('Painting (Interior)','₹299/sqft')">
+        <div class="thumb">PT</div>
+        <div><b>Interior Painting</b><br><small>From ₹299/sqft</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('Appliance Repair','₹599')">
+        <div class="thumb">AP</div>
+        <div><b>Appliance Repair</b><br><small>From ₹599</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('Sofa Cleaning','₹699')">
+        <div class="thumb">SF</div>
+        <div><b>Sofa Cleaning</b><br><small>From ₹699</small></div>
+      </div>
+
+      <div class="svc" onclick="addService('Water Tank Cleaning','₹899')">
+        <div class="thumb">WT</div>
+        <div><b>Water Tank Cleaning</b><br><small>From ₹899</small></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE SELECTED SERVICES -->
+  <div class="card selected-box">
+    <h3>Selected Services</h3>
+    <div id="selectedArea">
+        <p class="empty-msg">No services selected</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function addService(name, price) {
+    let area = document.getElementById("selectedArea");
+
+    // Remove "No services selected"
+    if (area.querySelector(".empty-msg")) {
+        area.innerHTML = "";
+    }
+
+    // Add service to selected list
+    let div = document.createElement("div");
+    div.className = "selected-item";
+    div.innerHTML = `
+        <b>${name}</b><br>
+        <span>Price: ${price}</span>
+    `;
+    area.appendChild(div);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,205 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leave Management System</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #0078d7;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      font-size: 24px;
+    }
+
+    .container {
+      width: 80%;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #0078d7;
+      border-bottom: 2px solid #0078d7;
+      padding-bottom: 5px;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #0078d7;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #005fa3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      text-align: center;
+      padding: 10px;
+    }
+
+    th {
+      background-color: #0078d7;
+      color: white;
+    }
+
+    .balance-box {
+      background: #e8f4ff;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <header>Leave Management System</header>
+
+  <div class="container">
+    <h2>Apply for Leave</h2>
+    <form id="leaveForm">
+      <label for="empName">Employee Name:</label>
+      <input type="text" id="empName" required>
+
+      <label for="leaveType">Leave Type:</label>
+      <select id="leaveType">
+        <option value="Casual">Casual Leave</option>
+        <option value="Medical">Medical Leave</option>
+      </select>
+
+      <label for="days">Number of Days:</label>
+      <input type="number" id="days" min="1" required>
+
+      <button type="submit">Apply Leave</button>
+    </form>
+
+    <div class="balance-box">
+      <h3>Leave Balance</h3>
+      <p>Casual Leave: <span id="casualBalance">10</span> days</p>
+      <p>Medical Leave: <span id="medicalBalance">5</span> days</p>
+    </div>
+
+    <h2>Leave History</h2>
+    <table id="leaveTable">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Leave Type</th>
+          <th>Days</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Leave entries appear here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Initialize leave balances
+    let casualLeave = localStorage.getItem('casualLeave') ? parseInt(localStorage.getItem('casualLeave')) : 10;
+    let medicalLeave = localStorage.getItem('medicalLeave') ? parseInt(localStorage.getItem('medicalLeave')) : 5;
+    let leaveHistory = JSON.parse(localStorage.getItem('leaveHistory')) || [];
+
+    // Update UI balances
+    document.getElementById('casualBalance').innerText = casualLeave;
+    document.getElementById('medicalBalance').innerText = medicalLeave;
+
+    // Display leave history
+    function renderTable() {
+      const tableBody = document.querySelector("#leaveTable tbody");
+      tableBody.innerHTML = "";
+      leaveHistory.forEach((leave, index) => {
+        const row = `<tr>
+                      <td>${leave.name}</td>
+                      <td>${leave.type}</td>
+                      <td>${leave.days}</td>
+                      <td>${leave.status}</td>
+                    </tr>`;
+        tableBody.innerHTML += row;
+      });
+    }
+    renderTable();
+
+    // Handle form submission
+    document.getElementById('leaveForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('empName').value.trim();
+      const type = document.getElementById('leaveType').value;
+      const days = parseInt(document.getElementById('days').value);
+
+      if (!name || days <= 0) {
+        alert("Please fill all fields correctly!");
+        return;
+      }
+
+      if (type === "Casual" && days > casualLeave) {
+        alert("Not enough Casual Leave available!");
+        return;
+      }
+      if (type === "Medical" && days > medicalLeave) {
+        alert("Not enough Medical Leave available!");
+        return;
+      }
+
+      // Deduct leaves
+      if (type === "Casual") casualLeave -= days;
+      else medicalLeave -= days;
+
+      // Save to local storage
+      localStorage.setItem('casualLeave', casualLeave);
+      localStorage.setItem('medicalLeave', medicalLeave);
+
+      // Save leave record
+      leaveHistory.push({ name, type, days, status: "Approved" });
+      localStorage.setItem('leaveHistory', JSON.stringify(leaveHistory));
+
+      // Update UI
+      document.getElementById('casualBalance').innerText = casualLeave;
+      document.getElementById('medicalBalance').innerText = medicalLeave;
+      renderTable();
+
+      alert("Leave applied successfully!");
+      document.getElementById('leaveForm').reset();
+    });
+  </script>
+</body>
+</html>

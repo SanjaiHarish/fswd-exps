@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickClassifieds 🛒</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: url('https://images.unsplash.com/photo-1599058917212-d750089bc07f') no-repeat center center/cover;
+      position: relative;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    /* dark overlay */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 87, 34, 0.9);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      border-bottom: 3px solid #e64a19;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(5px);
+    }
+
+    h2 {
+      color: #ff5722;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .post-form, .product-list {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .post-form:hover, .product-list:hover {
+      transform: scale(1.01);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #ff5722;
+      box-shadow: 0 0 5px rgba(255, 87, 34, 0.5);
+    }
+
+    button {
+      background: #ff5722;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #e64a19;
+    }
+
+    .product {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-info {
+      max-width: 70%;
+    }
+
+    .product img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-right: 15px;
+      border: 2px solid #ff5722;
+    }
+
+    .product h3 {
+      margin: 0;
+      color: #ff5722;
+    }
+
+    .product button {
+      background: #4caf50;
+      transition: background 0.3s;
+    }
+
+    .product button:hover {
+      background: #388e3c;
+    }
+  </style>
+</head>
+<body>
+  <header>QuickClassifieds 🛒</header>
+
+  <div class="container">
+    <!-- Post Product Form -->
+    <div class="post-form">
+      <h2>Sell Your Product</h2>
+      <input type="text" id="title" placeholder="Product Title">
+      <textarea id="description" rows="3" placeholder="Product Description"></textarea>
+      <input type="number" id="price" placeholder="Price (₹)">
+      <input type="text" id="image" placeholder="Image URL (Optional)">
+      <button onclick="addProduct()">Post Product</button>
+    </div>
+
+    <!-- Product List -->
+    <div class="product-list">
+      <h2>Available Products</h2>
+      <div id="productsContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    let products = JSON.parse(localStorage.getItem('products')) || [];
+
+    function addProduct() {
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const price = document.getElementById('price').value.trim();
+      const image = document.getElementById('image').value.trim() || "https://via.placeholder.com/120";
+
+      if (!title || !description || !price) {
+        alert("⚠️ Please fill all the fields!");
+        return;
+      }
+
+      const product = {
+        id: Date.now(),
+        title,
+        description,
+        price,
+        image
+      };
+
+      products.unshift(product);
+      localStorage.setItem('products', JSON.stringify(products));
+
+      document.getElementById('title').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('price').value = '';
+      document.getElementById('image').value = '';
+
+      displayProducts();
+    }
+
+    function displayProducts() {
+      const container = document.getElementById('productsContainer');
+      container.innerHTML = '';
+
+      if (products.length === 0) {
+        container.innerHTML = "<p style='text-align:center;'>🛍️ No products available. Post one above!</p>";
+        return;
+      }
+
+      products.forEach(product => {
+        container.innerHTML += `
+          <div class="product">
+            <div style="display:flex; align-items:center;">
+              <img src="${product.image}" alt="${product.title}">
+              <div class="product-info">
+                <h3>${product.title}</h3>
+                <p>${product.description}</p>
+                <p><strong>₹${product.price}</strong></p>
+              </div>
+            </div>
+            <button onclick="buyProduct(${product.id})">Buy</button>
+          </div>
+        `;
+      });
+    }
+
+    function buyProduct(id) {
+      if (confirm("🛒 Do you want to buy this product?")) {
+        products = products.filter(p => p.id !== id);
+        localStorage.setItem('products', JSON.stringify(products));
+        displayProducts();
+        alert("✅ Purchase successful!");
+      }
+    }
+
+    // Initial load
+    displayProducts();
+  </script>
+</body>
+</html>
